@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Mailbox body -->
+  <rect x="50" y="80" width="100" height="80" rx="15" fill="#9E9E9E"/>
+  <!-- Mailbox flag -->
+  <rect x="140" y="70" width="30" height="15" rx="3" fill="#E91E63"/>
+  <rect x="165" y="75" width="5" height="25" fill="#9E9E9E"/>
+  <!-- Mailbox door -->
+  <rect x="70" y="100" width="60" height="50" rx="8" fill="#757575"/>
+  <!-- Flag details -->
+  <circle cx="145" cy="77" r="2" fill="#C2185B"/>
+</svg>
+
