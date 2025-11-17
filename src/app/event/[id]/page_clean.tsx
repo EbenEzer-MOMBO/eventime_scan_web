@@ -34,13 +34,6 @@ export default function EventDetailPage() {
     try {
       setLoading(true);
 
-      // Récupérer l'événement depuis localStorage
-      const storedEvent = localStorage.getItem('current_event');
-      if (storedEvent) {
-        const parsedEvent = JSON.parse(storedEvent);
-        setEvent(parsedEvent);
-      }
-
       // Charger les données en parallèle
       const [participantsResponse, stats] = await Promise.all([
         ParticipantService.getParticipantsList(eventId),
@@ -49,6 +42,9 @@ export default function EventDetailPage() {
 
       setParticipants(participantsResponse.data);
       setTicketStats(stats);
+
+      // Note: On devrait récupérer les détails de l'événement depuis l'API
+      // Pour l'instant, on peut le stocker dans localStorage ou le passer via state
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
     } finally {
@@ -498,4 +494,3 @@ export default function EventDetailPage() {
     </div>
   );
 }
-                
