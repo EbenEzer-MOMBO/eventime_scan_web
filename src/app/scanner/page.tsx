@@ -17,6 +17,9 @@ function ScannerContent() {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(undefined);
+  const [showCameraSelector, setShowCameraSelector] = useState(false);
 
   useEffect(() => {
     requestCameraPermission();
@@ -48,9 +51,7 @@ function ScannerContent() {
       
       // Demander l'autorisation de la caméra
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment' // Caméra arrière sur mobile
-        } 
+        video: true
       });
       
       console.log('✅ [SCANNER] Autorisation accordée');
@@ -59,7 +60,10 @@ function ScannerContent() {
       // Arrêter le stream de test
       stream.getTracks().forEach(track => track.stop());
       
-      // Démarrer le scan
+      // Récupérer la liste des caméras disponibles
+      await loadAvailableCameras();
+      
+      // Démarrer le scan avec la caméra par défaut
       startScanning();
     } catch (err) {
       console.error('❌ [SCANNER] Erreur d\'autorisation:', err);
@@ -81,17 +85,52 @@ function ScannerContent() {
     }
   };
 
-  const startScanning = async () => {
-    if (!videoRef.current || isScanning) return;
+  const loadAvailableCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(device => device.kind === 'videoinput');
+      console.log('🔵 [SCANNER] Caméras disponibles:', cameras);
+      setAvailableCameras(cameras);
+      
+      // Sélectionner la caméra arrière par défaut si disponible
+      const backCamera = cameras.find(camera => 
+        camera.label.toLowerCase().includes('back') || 
+        camera.label.toLowerCase().includes('arrière') ||
+        camera.label.toLowerCase().includes('rear')
+      );
+      
+      if (backCamera) {
+        setSelectedCameraId(backCamera.deviceId);
+        console.log('✅ [SCANNER] Caméra arrière sélectionnée:', backCamera.label);
+      } else if (cameras.length > 0) {
+        setSelectedCameraId(cameras[0].deviceId);
+        console.log('✅ [SCANNER] Première caméra sélectionnée:', cameras[0].label);
+      }
+    } catch (err) {
+      console.error('❌ [SCANNER] Erreur lors de la récupération des caméras:', err);
+    }
+  };
+
+  const startScanning = async (cameraId?: string) => {
+    if (!videoRef.current) return;
 
     try {
+      // Arrêter le scan précédent s'il existe
+      if (codeReaderRef.current && isScanning) {
+        stopScanning();
+      }
+
       setIsScanning(true);
-      console.log('🔵 [SCANNER] Démarrage du scan...');
+      setError('');
+      console.log('🔵 [SCANNER] Démarrage du scan avec caméra:', cameraId || 'par défaut');
       
       codeReaderRef.current = new BrowserQRCodeReader();
       
+      // Utiliser la caméra sélectionnée ou la caméra par défaut
+      const deviceId = cameraId || selectedCameraId;
+      
       await codeReaderRef.current.decodeFromVideoDevice(
-        undefined, // undefined = utiliser la caméra par défaut
+        deviceId, // ID de la caméra à utiliser
         videoRef.current,
         (result, error) => {
           // Utiliser isProcessingRef.current au lieu de isProcessing pour avoir la valeur à jour
@@ -105,11 +144,20 @@ function ScannerContent() {
           }
         }
       );
+      
+      console.log('✅ [SCANNER] Scan démarré avec succès');
     } catch (err) {
       console.error('❌ [SCANNER] Erreur lors du démarrage:', err);
       setError('Erreur lors du démarrage du scanner');
       setIsScanning(false);
     }
+  };
+
+  const handleCameraChange = async (cameraId: string) => {
+    console.log('🔵 [SCANNER] Changement de caméra:', cameraId);
+    setSelectedCameraId(cameraId);
+    setShowCameraSelector(false);
+    await startScanning(cameraId);
   };
 
   const stopScanning = () => {
@@ -268,8 +316,61 @@ function ScannerContent() {
           </svg>
         </button>
         <h1 className="text-white text-xl font-semibold">Scanner QR Code</h1>
-        <div className="w-10"></div>
+        
+        {/* Bouton sélecteur de caméra */}
+        {availableCameras.length > 1 && (
+          <button 
+            onClick={() => setShowCameraSelector(!showCameraSelector)}
+            className="text-white hover:scale-110 transition-transform relative"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg>
+            {availableCameras.length > 1 && (
+              <span className="absolute -top-1 -right-1 bg-[#8BC34A] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {availableCameras.length}
+              </span>
+            )}
+          </button>
+        )}
+        {availableCameras.length <= 1 && <div className="w-10"></div>}
       </div>
+
+      {/* Menu déroulant de sélection de caméra */}
+      {showCameraSelector && availableCameras.length > 1 && (
+        <div className="absolute top-20 right-6 z-50 bg-white rounded-2xl shadow-2xl overflow-hidden max-w-xs">
+          <div className="bg-[#8BC34A] text-white px-4 py-3 font-semibold">
+            Sélectionner une caméra
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {availableCameras.map((camera, index) => (
+              <button
+                key={camera.deviceId}
+                onClick={() => handleCameraChange(camera.deviceId)}
+                className={`w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors border-b border-gray-200 last:border-b-0 ${
+                  camera.deviceId === selectedCameraId ? 'bg-[#8BC34A]/10 font-semibold' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-5 h-5 ${camera.deviceId === selectedCameraId ? 'text-[#8BC34A]' : 'text-gray-400'}`}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                  </svg>
+                  <div className="flex-1">
+                    <div className={`text-sm ${camera.deviceId === selectedCameraId ? 'text-[#8BC34A]' : 'text-gray-700'}`}>
+                      {camera.label || `Caméra ${index + 1}`}
+                    </div>
+                    {camera.deviceId === selectedCameraId && (
+                      <div className="text-xs text-[#8BC34A] mt-1">✓ Active</div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Zone de scan avec vidéo */}
       <div className="flex-1 flex items-center justify-center p-6">
