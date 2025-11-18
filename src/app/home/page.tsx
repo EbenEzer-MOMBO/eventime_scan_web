@@ -38,6 +38,10 @@ export default function HomePage() {
         EventService.getEventsAvenir(id_agent),
       ]);
 
+      console.log('🔍 [HOME] Réponse complète événement en cours:', eventEnCoursData);
+      console.log('🔍 [HOME] Toutes les propriétés:', Object.keys(eventEnCoursData || {}));
+      console.log('🔍 [HOME] Données JSON:', JSON.stringify(eventEnCoursData, null, 2));
+
       setEventEnCours(eventEnCoursData);
       setEventsAvenir(eventsAvenirData.success ? eventsAvenirData.data : []);
 

@@ -3,26 +3,27 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { 
-  EventService, 
-  ParticipantService, 
+import {
+  EventService,
+  ParticipantService,
   TicketService,
-  type Event, 
-  type Participant 
+  type Event,
+  type Participant
 } from '@/services';
 
 export default function EventDetailPage() {
   const router = useRouter();
   const params = useParams();
   const eventId = params.id as string;
-  
+
   const [activeTab, setActiveTab] = useState<'description' | 'participants'>('description');
   const [event, setEvent] = useState<Event | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [ticketStats, setTicketStats] = useState<{ 
-    total: number | null; 
-    validated: number | null; 
-    remaining: number | null 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [ticketStats, setTicketStats] = useState<{
+    total: number | null;
+    validated: number | null;
+    remaining: number | null
   }>({ total: null, validated: null, remaining: null });
   const [loading, setLoading] = useState(true);
 
@@ -56,8 +57,21 @@ export default function EventDetailPage() {
     }
   };
 
+  // Filtrer les participants selon la recherche
+  const filteredParticipants = participants.filter(participant => {
+    const query = searchQuery.toLowerCase();
+    return (
+      participant.buyer_name?.toLowerCase().includes(query) ||
+      participant.ticket_number?.toLowerCase().includes(query) ||
+      participant.participant_email?.toLowerCase().includes(query) ||
+      participant.participant_name?.toLowerCase().includes(query) ||
+      participant.participant_lastname?.toLowerCase().includes(query)
+    );
+  });
+
   const handleBack = () => {
-    router.back();
+    // Rediriger vers la page d'accueil
+    router.push('/home');
   };
 
   const handleScan = () => {
@@ -113,9 +127,9 @@ export default function EventDetailPage() {
           />
         )}
         <div className="absolute inset-0 bg-black/30"></div>
-        
+
         {/* Bouton retour */}
-        <button 
+        <button
           onClick={handleBack}
           className="absolute top-6 left-6 z-20 text-white hover:scale-110 transition-transform"
         >
@@ -152,21 +166,19 @@ export default function EventDetailPage() {
       <div className="flex bg-gray-100 mx-4 mt-6 rounded-2xl overflow-hidden">
         <button
           onClick={() => setActiveTab('description')}
-          className={`flex-1 py-4 px-6 font-bold text-lg transition-all ${
-            activeTab === 'description'
+          className={`flex-1 py-4 px-6 font-bold text-lg transition-all ${activeTab === 'description'
               ? 'bg-[#8BC34A] text-white'
               : 'bg-gray-100 text-gray-500'
-          }`}
+            }`}
         >
           Description
         </button>
         <button
           onClick={() => setActiveTab('participants')}
-          className={`flex-1 py-4 px-6 font-bold text-lg transition-all ${
-            activeTab === 'participants'
+          className={`flex-1 py-4 px-6 font-bold text-lg transition-all ${activeTab === 'participants'
               ? 'bg-[#8BC34A] text-white'
               : 'bg-gray-100 text-gray-500'
-          }`}
+            }`}
         >
           Participants
         </button>
@@ -184,7 +196,7 @@ export default function EventDetailPage() {
             {/* Description */}
             <div className="space-y-4 text-base leading-relaxed">
               {event?.description ? (
-                <div 
+                <div
                   className="text-justify text-gray-700"
                   dangerouslySetInnerHTML={{ __html: event.description }}
                 />
@@ -274,7 +286,7 @@ export default function EventDetailPage() {
                   />
                 </svg>
               </div>
-              
+
               <div className="text-center text-white">
                 <div className="text-5xl font-bold">{participants.length}</div>
                 <div className="text-xl font-semibold">Participants</div>
@@ -298,24 +310,75 @@ export default function EventDetailPage() {
               </div>
             </div>
 
-            {/* Liste des participants */}
-            {participants.length > 0 ? (
-              <div className="space-y-4">
-                {participants.map((participant) => (
-                  <div 
-                    key={participant.ticket_item_id}
-                    className={`bg-white border-2 rounded-3xl p-5 flex items-center gap-4 ${
-                      participant.status === 1 ? 'border-green-200' : 'border-orange-200'
-                    }`}
+            {/* Barre de recherche */}
+            <div className="mb-6">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Rechercher un participant..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border-2 border-gray-200 rounded-full px-6 py-4 pl-14 text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#8BC34A] transition-colors"
+                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-6 h-6 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                  />
+                </svg>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    <div 
-                      className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 ${
-                        ParticipantService.getStatusColor(participant)
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-6 h-6"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {searchQuery && (
+                <p className="text-sm text-gray-500 mt-2 ml-2">
+                  {filteredParticipants.length} résultat{filteredParticipants.length > 1 ? 's' : ''} trouvé{filteredParticipants.length > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+
+            {/* Liste des participants */}
+            {filteredParticipants.length > 0 ? (
+              <div className="space-y-4">
+                {filteredParticipants.map((participant) => (
+                  <div
+                    key={participant.ticket_item_id}
+                    className={`bg-white border-2 rounded-3xl p-5 flex items-center gap-4 ${participant.status === 1 ? 'border-green-200' : 'border-orange-200'
                       }`}
+                  >
+                    <div
+                      className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 ${ParticipantService.getStatusColor(participant)
+                        }`}
                     >
                       {ParticipantService.getParticipantInitial(participant)}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <svg
@@ -332,14 +395,14 @@ export default function EventDetailPage() {
                             d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                           />
                         </svg>
-                        <span className="font-bold text-lg truncate">
+                        <span className="font-bold text-lg text-gray-600 truncate">
                           {ParticipantService.truncateText(
                             ParticipantService.getFullName(participant),
                             20
                           )}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-1">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -359,7 +422,7 @@ export default function EventDetailPage() {
                           {ParticipantService.truncateText(participant.ticket_number, 15)}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-1">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -379,7 +442,7 @@ export default function EventDetailPage() {
                           {ParticipantService.truncateText(participant.participant_email, 20)}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -399,10 +462,9 @@ export default function EventDetailPage() {
                       </div>
                     </div>
 
-                    <div 
-                      className={`text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 flex-shrink-0 ${
-                        ParticipantService.getStatusColor(participant)
-                      }`}
+                    <div
+                      className={`text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 flex-shrink-0 ${ParticipantService.getStatusColor(participant)
+                        }`}
                     >
                       {participant.status === 1 ? (
                         <svg
@@ -459,11 +521,22 @@ export default function EventDetailPage() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-500 mb-2">
-                  Aucun participant
+                  {searchQuery ? 'Aucun résultat' : 'Aucun participant'}
                 </h3>
                 <p className="text-gray-400">
-                  Les participants apparaîtront ici
+                  {searchQuery
+                    ? `Aucun participant ne correspond à "${searchQuery}"`
+                    : 'Les participants apparaîtront ici'
+                  }
                 </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="mt-4 bg-[#8BC34A] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#7CB342] transition-colors"
+                  >
+                    Réinitialiser la recherche
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -471,7 +544,7 @@ export default function EventDetailPage() {
       </div>
 
       {/* Bouton flottant Scanner QR */}
-      <button 
+      <button
         onClick={handleScan}
         className="fixed bottom-8 right-1/2 transform translate-x-1/2 w-20 h-20 bg-[#8BC34A] rounded-full shadow-2xl flex items-center justify-center text-white hover:bg-[#7CB342] transition-all hover:scale-110 z-50"
       >
@@ -498,4 +571,3 @@ export default function EventDetailPage() {
     </div>
   );
 }
-                

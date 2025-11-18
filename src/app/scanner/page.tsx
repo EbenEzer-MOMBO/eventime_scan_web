@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { ValidationService } from '@/services';
 
-export default function ScannerPage() {
+function ScannerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get('eventId');
@@ -183,7 +183,20 @@ export default function ScannerPage() {
 
   const handleBack = () => {
     stopScanning();
-    router.back();
+    
+    // Récupérer l'événement depuis localStorage pour rediriger vers sa page
+    const storedEvent = localStorage.getItem('current_event');
+    if (storedEvent) {
+      try {
+        const event = JSON.parse(storedEvent);
+        router.push(`/event/${event.event_id}`);
+      } catch (error) {
+        console.error('Erreur lors de la récupération de l\'événement:', error);
+        router.back();
+      }
+    } else {
+      router.back();
+    }
   };
 
   // État de demande d'autorisation
@@ -325,6 +338,24 @@ export default function ScannerPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ScannerPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <svg className="animate-spin h-16 w-16 text-[#8BC34A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-white text-xl font-semibold">Chargement du scanner...</p>
+        </div>
+      </div>
+    }>
+      <ScannerContent />
+    </Suspense>
   );
 }
 
