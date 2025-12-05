@@ -32,29 +32,60 @@ export default function HomePage() {
     try {
       setLoading(true);
       
-      // Charger les données en parallèle
-      const [eventEnCoursData, eventsAvenirData] = await Promise.all([
-        EventService.getEventEnCours(id_agent),
-        EventService.getEventsAvenir(id_agent),
-      ]);
+      // Charger uniquement les événements à venir
+      const eventsAvenirData = await EventService.getEventsAvenir(id_agent);
+      const allEvents = eventsAvenirData.success ? eventsAvenirData.data : [];
 
-      console.log('🔍 [HOME] Réponse complète événement en cours:', eventEnCoursData);
-      console.log('🔍 [HOME] Toutes les propriétés:', Object.keys(eventEnCoursData || {}));
-      console.log('🔍 [HOME] Données JSON:', JSON.stringify(eventEnCoursData, null, 2));
+      console.log('🔍 [HOME] Tous les événements:', allEvents);
 
-      setEventEnCours(eventEnCoursData);
-      setEventsAvenir(eventsAvenirData.success ? eventsAvenirData.data : []);
+      // Obtenir la date d'aujourd'hui (sans heure)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      // Si un événement est en cours, charger ses statistiques
-      if (eventEnCoursData && eventEnCoursData.event_id) {
+      // Filtrer les événements du jour (peu importe le statut)
+      const eventsDuJour = allEvents.filter((event: Event) => {
+        const eventDate = new Date(event.start_date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.getTime() === today.getTime();
+      });
+
+      // Filtrer les événements à venir (pas aujourd'hui)
+      const eventsAvenirFiltered = allEvents.filter((event: Event) => {
+        const eventDate = new Date(event.start_date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.getTime() !== today.getTime();
+      });
+
+      console.log('🔍 [HOME] Événements du jour:', eventsDuJour);
+      console.log('🔍 [HOME] Événements à venir filtrés:', eventsAvenirFiltered);
+
+      // Prendre le premier événement du jour comme événement en cours
+      const eventEnCoursFound = eventsDuJour[0];
+
+      // Convertir l'événement en cours au format EventEnCoursResponse
+      if (eventEnCoursFound) {
+        const eventEnCoursConverted: EventEnCoursResponse = {
+          event_id: eventEnCoursFound.event_id,
+          title: eventEnCoursFound.title,
+          image: eventEnCoursFound.image,
+          start_date: eventEnCoursFound.start_date,
+          end_date: eventEnCoursFound.end_date,
+          location: eventEnCoursFound.location,
+        };
+        setEventEnCours(eventEnCoursConverted);
+
+        // Charger les statistiques de l'événement en cours
         const [remaining, validated] = await Promise.all([
-          TicketService.getNbTicketRestant(eventEnCoursData.event_id.toString()),
-          TicketService.getNbTicketValidated(eventEnCoursData.event_id.toString()),
+          TicketService.getNbTicketRestant(eventEnCoursFound.event_id.toString()),
+          TicketService.getNbTicketValidated(eventEnCoursFound.event_id.toString()),
         ]);
         setTicketStats({ remaining, validated });
       } else {
+        setEventEnCours(null);
         setTicketStats({ remaining: null, validated: null });
       }
+
+      setEventsAvenir(eventsAvenirFiltered);
     } catch (error) {
       console.error('Erreur lors du chargement des événements:', error);
     } finally {
