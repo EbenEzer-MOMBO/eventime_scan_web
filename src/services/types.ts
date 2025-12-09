@@ -45,27 +45,14 @@ export interface EventsAvenirResponse {
 }
 
 export interface EventEnCoursRequest {
-  clic: 'event_en_cours';
   id_agent: string;
 }
 
 export interface EventEnCoursResponse {
-  status?: 'non';
-  // Quand un événement est trouvé, contient toutes les propriétés de Event
-  event_id?: number;
-  title?: string;
-  description?: string;
-  location?: string;
-  start_date?: string;
-  end_date?: string;
-  image?: string;
-  event_ref?: string;
-  status_event?: string;
-  organizer_id?: number;
-  created_at?: string;
-  updated_at?: string;
-  // Toute autre colonne de la table events sera également incluse
-  [key: string]: any;
+  success: boolean;
+  message: string;
+  data: Event[];
+  count: number;
 }
 
 // ============= Tickets =============

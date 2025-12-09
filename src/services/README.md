@@ -54,6 +54,9 @@ import { EventService } from '@/services';
 const eventsResponse = await EventService.getEventsAvenir('id_agent_123');
 
 if (eventsResponse.success) {
+  console.log(eventsResponse.message); // "Événements à venir récupérés avec succès"
+  console.log(`${eventsResponse.count} événement(s) trouvé(s)`);
+  
   eventsResponse.data.forEach(event => {
     console.log(event.title);
     
@@ -64,13 +67,20 @@ if (eventsResponse.success) {
     const startDate = EventService.formatDate(event.start_date);
     const endDate = EventService.formatDate(event.end_date);
   });
+} else {
+  console.log(eventsResponse.message); // Message d'erreur si success = false
 }
 
-// Récupérer l'événement en cours
-const currentEvent = await EventService.getEventEnCours('id_agent_123');
+// Récupérer les événements en cours
+const eventsEnCoursResponse = await EventService.getEventEnCours('id_agent_123');
 
-if (currentEvent.status !== 'non') {
-  console.log('Événement en cours:', currentEvent.title);
+if (eventsEnCoursResponse.success) {
+  console.log(eventsEnCoursResponse.message); // "Événements en cours récupérés avec succès" ou "Aucun événement en cours trouvé"
+  
+  if (eventsEnCoursResponse.data.length > 0) {
+    const firstEvent = eventsEnCoursResponse.data[0];
+    console.log('Événement en cours:', firstEvent.title);
+  }
 }
 ```
 

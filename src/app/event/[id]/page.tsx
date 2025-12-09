@@ -75,8 +75,54 @@ export default function EventDetailPage() {
   };
 
   const handleScan = () => {
-    // Redirection vers la page scanner avec l'ID de l'événement
-    router.push(`/scanner?eventId=${eventId}`);
+    // Vérifier si le scan est disponible avant de rediriger
+    if (event && isScanAvailable(event)) {
+      router.push(`/scanner?eventId=${eventId}`);
+    }
+  };
+
+  // Fonction pour vérifier si le scan est possible pour un événement
+  const isScanAvailable = (event: Event): boolean => {
+    if (!event.scan_date || !event.start_date) return true; // Si pas de restriction, autoriser le scan
+    
+    const now = new Date();
+    const eventStart = new Date(event.start_date);
+    const eventEnd = event.end_date ? new Date(event.end_date) : eventStart;
+    const hoursBeforeEvent = event.scan_date; // Nombre d'heures avant le début
+    
+    // Calculer l'heure à partir de laquelle le scan est possible
+    const scanAvailableTime = new Date(eventStart.getTime() - (hoursBeforeEvent * 60 * 60 * 1000));
+    
+    // Le scan est possible si on est après l'heure autorisée et avant la fin de l'événement
+    return now >= scanAvailableTime && now <= eventEnd;
+  };
+
+  // Fonction pour obtenir le message de disponibilité du scan
+  const getScanAvailabilityMessage = (event: Event): string => {
+    if (!event.scan_date || !event.start_date) return '';
+    
+    const now = new Date();
+    const eventStart = new Date(event.start_date);
+    const eventEnd = event.end_date ? new Date(event.end_date) : eventStart;
+    const hoursBeforeEvent = event.scan_date;
+    const scanAvailableTime = new Date(eventStart.getTime() - (hoursBeforeEvent * 60 * 60 * 1000));
+    
+    if (now < scanAvailableTime) {
+      // Calculer le temps restant avant que le scan soit disponible
+      const diffMs = scanAvailableTime.getTime() - now.getTime();
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (diffHours > 0) {
+        return `Scan disponible dans ${diffHours}h${diffMinutes > 0 ? ` ${diffMinutes}min` : ''}`;
+      } else {
+        return `Scan disponible dans ${diffMinutes}min`;
+      }
+    } else if (now >= scanAvailableTime && now <= eventEnd) {
+      return 'Scan disponible';
+    } else {
+      return 'Scan terminé';
+    }
   };
 
   if (loading) {
@@ -238,6 +284,34 @@ export default function EventDetailPage() {
                       <span className="text-gray-600">{event.location}</span>
                     </span>
                   </p>
+                )}
+
+                {/* Disponibilité du scan */}
+                {event?.scan_date && (
+                  <div className={`flex items-start gap-3 p-4 rounded-xl ${
+                    isScanAvailable(event) 
+                      ? 'bg-green-50 border-2 border-green-200' 
+                      : 'bg-yellow-50 border-2 border-yellow-200'
+                  }`}>
+                    <span className="text-2xl">
+                      {isScanAvailable(event) ? '✅' : '⏰'}
+                    </span>
+                    <span className="flex-1">
+                      <strong className={`block ${
+                        isScanAvailable(event) ? 'text-green-700' : 'text-yellow-700'
+                      }`}>
+                        Disponibilité du scan:
+                      </strong>
+                      <span className={`${
+                        isScanAvailable(event) ? 'text-green-600' : 'text-yellow-600'
+                      }`}>
+                        {getScanAvailabilityMessage(event)}
+                      </span>
+                      <div className="text-sm text-gray-500 mt-1">
+                        Scan autorisé {event.scan_date}h avant le début de l&apos;événement
+                      </div>
+                    </span>
+                  </div>
                 )}
 
                 {/* Statistiques */}
@@ -544,30 +618,52 @@ export default function EventDetailPage() {
       </div>
 
       {/* Bouton flottant Scanner QR */}
-      <button
-        onClick={handleScan}
-        className="fixed bottom-8 right-1/2 transform translate-x-1/2 w-20 h-20 bg-[#8BC34A] rounded-full shadow-2xl flex items-center justify-center text-white hover:bg-[#7CB342] transition-all hover:scale-110 z-50"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-10 h-10"
+      <div className="fixed bottom-8 right-1/2 transform translate-x-1/2 z-50 flex flex-col items-center gap-3">
+        {/* Message de disponibilité */}
+        {event && event.scan_date && !isScanAvailable(event) && (
+          <div className="bg-yellow-500 text-white px-6 py-3 rounded-full font-semibold text-sm shadow-lg animate-pulse">
+            {getScanAvailabilityMessage(event)}
+          </div>
+        )}
+        
+        {/* Bouton Scanner */}
+        <button
+          onClick={handleScan}
+          disabled={event ? !isScanAvailable(event) : false}
+          className={`w-20 h-20 rounded-full shadow-2xl flex items-center justify-center text-white transition-all ${
+            event && isScanAvailable(event)
+              ? 'bg-[#8BC34A] hover:bg-[#7CB342] hover:scale-110 cursor-pointer'
+              : 'bg-gray-400 cursor-not-allowed opacity-60'
+          }`}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"
-          />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            className="w-10 h-10"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"
+            />
+          </svg>
+        </button>
+        
+        {/* Label du bouton */}
+        <span className={`text-sm font-semibold ${
+          event && isScanAvailable(event) ? 'text-[#8BC34A]' : 'text-gray-400'
+        }`}>
+          {event && isScanAvailable(event) ? 'Scanner' : 'Non disponible'}
+        </span>
+      </div>
     </div>
   );
 }

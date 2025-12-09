@@ -5,6 +5,7 @@ export const API_CONFIG = {
   ENDPOINTS: {
     SPB_INDEX: '/spb_index.php',
     EVENTS_AVENIR: '/mobile/events-avenir',
+    EVENTS_EN_COURS: '/mobile/events-en-cours',
     PARTICIPANTS_LIST: '/mobile/participants-list',
   },
   TIMEOUT: 10000, // 10 secondes
