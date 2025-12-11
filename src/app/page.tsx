@@ -115,7 +115,7 @@ export default function Home() {
         {/* Logo Eventime */}
         <div className="mb-12">
           <Image
-            src="/logo-dark.png"
+            src="/logo-eventime-noel-alt.png"
             alt="Eventime Logo"
             width={200}
             height={60}
