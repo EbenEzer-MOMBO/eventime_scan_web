@@ -3,15 +3,15 @@
 import { API_CONFIG, DEFAULT_HEADERS } from './api.config';
 import type { ParticipantsListRequest, ParticipantsListResponse, Participant } from './types';
 
+function isValidatedStatus(status: number | string): boolean {
+  const value = String(status);
+  return value === '1' || value === 'scanned';
+}
+
 /**
  * Service pour gérer les participants
  */
 export class ParticipantService {
-  /**
-   * Récupérer la liste des participants d'un événement
-   * @param event_id - ID de l'événement
-   * @returns Liste des participants
-   */
   static async getParticipantsList(event_id: string): Promise<ParticipantsListResponse> {
     try {
       const body: ParticipantsListRequest = {
@@ -41,69 +41,36 @@ export class ParticipantService {
     }
   }
 
-  /**
-   * Filtrer les participants validés
-   * @param participants - Liste des participants
-   * @returns Liste des participants validés (status = 1)
-   */
+  static isValidated(participant: Participant): boolean {
+    return isValidatedStatus(participant.status);
+  }
+
   static filterValidatedParticipants(participants: Participant[]): Participant[] {
-    return participants.filter((participant) => participant.status === 1);
+    return participants.filter((participant) => this.isValidated(participant));
   }
 
-  /**
-   * Filtrer les participants en attente
-   * @param participants - Liste des participants
-   * @returns Liste des participants en attente (status = 0)
-   */
   static filterPendingParticipants(participants: Participant[]): Participant[] {
-    return participants.filter((participant) => participant.status === 0);
+    return participants.filter((participant) => !this.isValidated(participant));
   }
 
-  /**
-   * Obtenir l'initiale d'un participant pour l'avatar
-   * @param participant - Participant
-   * @returns Première lettre du nom
-   */
   static getParticipantInitial(participant: Participant): string {
     return participant.participant_name?.charAt(0).toUpperCase() || '?';
   }
 
-  /**
-   * Formater le nom complet d'un participant
-   * @param participant - Participant
-   * @returns Nom complet formaté
-   */
   static getFullName(participant: Participant): string {
     return `${participant.participant_name} ${participant.participant_lastname}`.trim();
   }
 
-  /**
-   * Tronquer un texte pour l'affichage
-   * @param text - Texte à tronquer
-   * @param maxLength - Longueur maximale
-   * @returns Texte tronqué
-   */
   static truncateText(text: string, maxLength: number = 10): string {
     if (text.length <= maxLength) return text;
     return `${text.substring(0, maxLength)}...`;
   }
 
-  /**
-   * Obtenir le statut d'un participant
-   * @param participant - Participant
-   * @returns Label du statut
-   */
   static getStatusLabel(participant: Participant): string {
-    return participant.status === 1 ? 'Validé' : 'En attente';
+    return this.isValidated(participant) ? 'Validé' : 'En attente';
   }
 
-  /**
-   * Obtenir la couleur du statut d'un participant
-   * @param participant - Participant
-   * @returns Classe CSS pour la couleur
-   */
   static getStatusColor(participant: Participant): string {
-    return participant.status === 1 ? 'bg-green-500' : 'bg-orange-400';
+    return this.isValidated(participant) ? 'bg-green-500' : 'bg-orange-400';
   }
 }
-

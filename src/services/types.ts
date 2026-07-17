@@ -1,8 +1,7 @@
-// Types pour l'API Eventime
+// Types pour l'API Eventime Scanner
 
 // ============= Authentification =============
 export interface LoginRequest {
-  clic: 'con';
   matricule: string;
   code: string;
 }
@@ -55,14 +54,14 @@ export interface EventEnCoursResponse {
   count: number;
 }
 
-// ============= Tickets =============
-export interface TicketCountRequest {
-  clic: 'nb_ticket_restant' | 'nb_ticket_update' | 'nb_ticket';
-  id_event: string;
-}
-
-export interface TicketCountResponse {
-  count: string | 'non';
+// ============= Stats (logique dashboard) =============
+export interface EventStatsResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    participants: number;
+    remaining: number;
+  };
 }
 
 // ============= Participants =============
@@ -73,7 +72,7 @@ export interface Participant {
   participant_name: string;
   participant_lastname: string;
   participant_email: string;
-  status: number;
+  status: number | string;
   created_at: string;
 }
 
@@ -89,32 +88,19 @@ export interface ParticipantsListResponse {
 }
 
 // ============= Validation de ticket =============
-export interface TicketValidationRequest {
-  clic: 'update';
-  numero_billet: string;
-}
-
-export interface TicketData {
-  ticket_item_id: number;
-  ticketNumber: string;
-  civility_buyer: string;
-  buyerName: string;
-  civility_participant: string;
-  participantName: string;
-  participantLastname: string;
-  participantEmailAddress: string;
-  participantTelephone: string | null;
-  participantMatricule: string | null;
-  event_id: number;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
+export interface ScannedTicketInfo {
+  ticket_number: string;
+  participant_name: string;
+  participant_email: string;
+  buyer_name: string;
+  event_title?: string;
+  scan_time?: string;
+  scanned_at?: string;
 }
 
 export interface TicketValidationResponse {
+  success: boolean;
   message: string;
-  result: number;
-  data: TicketData;
+  code?: string;
+  data?: ScannedTicketInfo;
 }
-

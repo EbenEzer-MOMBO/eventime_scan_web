@@ -1,18 +1,18 @@
-// Configuration de l'API Eventime
+// Configuration de l'API Eventime Scanner
 
 export const API_CONFIG = {
   BASE_URL: 'https://eventime.ga/api',
   ENDPOINTS: {
-    SPB_INDEX: '/spb_index.php',
-    EVENTS_AVENIR: '/mobile/events-avenir',
-    EVENTS_EN_COURS: '/mobile/events-en-cours',
-    PARTICIPANTS_LIST: '/mobile/participants-list',
+    LOGIN: '/scanner/login',
+    EVENTS_AVENIR: '/scanner/events-avenir',
+    EVENTS_EN_COURS: '/scanner/events-en-cours',
+    EVENT_STATS: '/scanner/event-stats',
+    PARTICIPANTS_LIST: '/scanner/participants-list',
+    SCAN_TICKET: '/scanner/scan-ticket',
   },
-  TIMEOUT: 10000, // 10 secondes
+  TIMEOUT: 10000,
 };
 
-// Headers par défaut pour toutes les requêtes
 export const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
 };
-

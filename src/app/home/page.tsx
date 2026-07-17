@@ -10,7 +10,7 @@ export default function HomePage() {
   const [agentData, setAgentData] = useState<ReturnType<typeof AuthService.getAgentData>>(null);
   const [eventsEnCours, setEventsEnCours] = useState<Event[]>([]);
   const [eventsAvenir, setEventsAvenir] = useState<Event[]>([]);
-  const [ticketStatsMap, setTicketStatsMap] = useState<Record<number, { remaining: number | null; validated: number | null }>>({});
+  const [ticketStatsMap, setTicketStatsMap] = useState<Record<number, { remaining: number | null; participants: number | null }>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -43,21 +43,21 @@ export default function HomePage() {
       setEventsEnCours(eventsEnCoursArray);
       setEventsAvenir(eventsAvenirData.success ? eventsAvenirData.data : []);
 
-      // Charger les statistiques pour tous les événements en cours
+      // Stats dashboard : participants (vendus) + remaining (non scannés)
       if (eventsEnCoursArray.length > 0) {
         const statsPromises = eventsEnCoursArray.map(async (event) => {
-          const [remaining, validated] = await Promise.all([
-            TicketService.getNbTicketRestant(event.event_id.toString()),
-            TicketService.getNbTicketValidated(event.event_id.toString()),
-          ]);
+          const stats = await TicketService.getEventStats(event.event_id.toString());
           return {
             eventId: event.event_id,
-            stats: { remaining, validated }
+            stats: {
+              remaining: stats.remaining,
+              participants: stats.participants,
+            },
           };
         });
 
         const statsResults = await Promise.all(statsPromises);
-        const statsMap: Record<number, { remaining: number | null; validated: number | null }> = {};
+        const statsMap: Record<number, { remaining: number | null; participants: number | null }> = {};
         statsResults.forEach(({ eventId, stats }) => {
           statsMap[eventId] = stats;
         });
@@ -213,7 +213,7 @@ export default function HomePage() {
             <div className="overflow-x-auto pb-4 -mx-6 px-6">
               <div className="flex gap-4" style={{ width: 'max-content' }}>
                 {eventsEnCours.map((event) => {
-                  const stats = ticketStatsMap[event.event_id] || { remaining: null, validated: null };
+                  const stats = ticketStatsMap[event.event_id] || { remaining: null, participants: null };
                   return (
                     <div 
                       key={event.event_id}
@@ -302,7 +302,7 @@ export default function HomePage() {
                                   d="M16.5 6v.75m0 3v.75m0 3v.75m0 3v.75M9.75 3h4.5m-4.5 15h4.5M12 3v18"
                                 />
                               </svg>
-                              <span className="text-sm font-semibold text-gray-600">Tickets restant</span>
+                              <span className="text-sm font-semibold text-gray-600">Non scannés</span>
                             </div>
                             <div className="text-4xl font-bold text-[#8BC34A]">
                               {stats.remaining !== null ? stats.remaining : '--'}
@@ -329,7 +329,7 @@ export default function HomePage() {
                               <span className="text-sm font-semibold text-gray-600">Participants</span>
                             </div>
                             <div className="text-4xl font-bold text-[#8BC34A]">
-                              {stats.validated !== null ? stats.validated : '--'}
+                              {stats.participants !== null ? stats.participants : '--'}
                             </div>
                           </div>
                         </div>

@@ -72,7 +72,7 @@ export default function TicketAlreadyValidatedPage() {
                 </svg>
                 <div className="flex-1">
                   <p className="text-gray-500 text-sm font-semibold mb-1">Ticket</p>
-                  <p className="text-black font-bold text-lg">{ticketData.data.ticketNumber}</p>
+                  <p className="text-black font-bold text-lg">{ticketData.data.ticket_number}</p>
                 </div>
               </div>
 
@@ -123,7 +123,7 @@ export default function TicketAlreadyValidatedPage() {
                 <div className="flex-1">
                   <p className="text-gray-500 text-sm font-semibold mb-1">Email</p>
                   <p className="text-black font-bold text-lg break-all">
-                    {ticketData.data.participantEmailAddress}
+                    {ticketData.data.participant_email}
                   </p>
                 </div>
               </div>

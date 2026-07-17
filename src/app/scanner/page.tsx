@@ -190,7 +190,7 @@ function ScannerContent() {
       console.log('🔵 [SCANNER] Validation du ticket:', qrData);
       
       // Valider le ticket via l'API
-      const result = await ValidationService.validateTicket(qrData);
+      const result = await ValidationService.validateTicket(qrData, eventId);
       
       if (!result) {
         setError('Erreur lors de la validation du ticket');

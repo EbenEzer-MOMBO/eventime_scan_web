@@ -15,16 +15,13 @@ export type {
   EventsAvenirResponse,
   EventEnCoursRequest,
   EventEnCoursResponse,
-  TicketCountRequest,
-  TicketCountResponse,
+  EventStatsResponse,
   Participant,
   ParticipantsListRequest,
   ParticipantsListResponse,
-  TicketValidationRequest,
+  ScannedTicketInfo,
   TicketValidationResponse,
-  TicketData,
 } from './types';
 
 // Export de la configuration
 export { API_CONFIG, DEFAULT_HEADERS } from './api.config';
-

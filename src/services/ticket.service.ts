@@ -1,127 +1,75 @@
-// Service de gestion des tickets
+// Service de gestion des tickets / stats
 
 import { API_CONFIG, DEFAULT_HEADERS } from './api.config';
-import type { TicketCountRequest, TicketCountResponse } from './types';
+import type { EventStatsResponse } from './types';
 
 /**
- * Service pour gérer les tickets
+ * Service pour les statistiques tickets (logique dashboard organisateur)
  */
 export class TicketService {
   /**
-   * Récupérer le nombre de tickets restants pour un événement
-   * @param id_event - ID de l'événement
-   * @returns Nombre de tickets restants
+   * Participants (vendus) + tickets non scannés pour un événement
    */
+  static async getEventStats(id_event: string): Promise<{
+    participants: number | null;
+    remaining: number | null;
+  }> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EVENT_STATS}`, {
+        method: 'POST',
+        headers: DEFAULT_HEADERS,
+        body: JSON.stringify({ event_id: id_event }),
+      });
+
+      const data: EventStatsResponse = await response.json();
+
+      if (!data.success || !data.data) {
+        return { participants: null, remaining: null };
+      }
+
+      return {
+        participants: data.data.participants,
+        remaining: data.data.remaining,
+      };
+    } catch (error) {
+      console.error('❌ [TICKET] Erreur event-stats:', error);
+      return { participants: null, remaining: null };
+    }
+  }
+
+  /** Tickets non encore scannés */
   static async getNbTicketRestant(id_event: string): Promise<number | null> {
-    try {
-      const formData = new FormData();
-      formData.append('clic', 'nb_ticket_restant');
-      formData.append('id_event', id_event);
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SPB_INDEX}`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const textResponse = await response.text();
-      console.log('🔵 [TICKET] Tickets restants:', textResponse);
-
-      if (textResponse === 'non' || textResponse.trim() === '') {
-        return null;
-      }
-
-      const count = parseInt(textResponse, 10);
-      return isNaN(count) ? null : count;
-    } catch (error) {
-      console.error('❌ [TICKET] Erreur lors de la récupération du nombre de tickets restants:', error);
-      return null;
-    }
+    const stats = await this.getEventStats(id_event);
+    return stats.remaining;
   }
 
-  /**
-   * Récupérer le nombre de tickets validés (participants) pour un événement
-   * @param id_event - ID de l'événement
-   * @returns Nombre de tickets validés
-   */
+  /** Participants vendus */
   static async getNbTicketValidated(id_event: string): Promise<number | null> {
-    try {
-      const formData = new FormData();
-      formData.append('clic', 'nb_ticket_update');
-      formData.append('id_event', id_event);
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SPB_INDEX}`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const textResponse = await response.text();
-      console.log('🔵 [TICKET] Tickets validés:', textResponse);
-
-      if (textResponse === 'non' || textResponse.trim() === '') {
-        return null;
-      }
-
-      const count = parseInt(textResponse, 10);
-      return isNaN(count) ? null : count;
-    } catch (error) {
-      console.error('❌ [TICKET] Erreur lors de la récupération du nombre de tickets validés:', error);
-      return null;
-    }
+    const stats = await this.getEventStats(id_event);
+    return stats.participants;
   }
 
   /**
-   * Récupérer le nombre total de tickets pour un événement
-   * @param id_event - ID de l'événement
-   * @returns Nombre total de tickets
-   */
-  static async getNbTicketTotal(id_event: string): Promise<number | null> {
-    try {
-      const formData = new FormData();
-      formData.append('clic', 'nb_ticket');
-      formData.append('id_event', id_event);
-
-      // Note: L'URL est en HTTP selon la documentation
-      const response = await fetch(`http://eventime.ga/api/spb_index.php`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const textResponse = await response.text();
-      console.log('🔵 [TICKET] Total de tickets:', textResponse);
-
-      if (textResponse === 'non' || textResponse.trim() === '') {
-        return null;
-      }
-
-      const count = parseInt(textResponse, 10);
-      return isNaN(count) ? null : count;
-    } catch (error) {
-      console.error('❌ [TICKET] Erreur lors de la récupération du nombre total de tickets:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Récupérer les statistiques complètes des tickets pour un événement
-   * @param id_event - ID de l'événement
-   * @returns Objet avec les statistiques
+   * Statistiques pour la page détail événement
+   * total = vendus, validated = scannés, remaining = non scannés
    */
   static async getTicketStats(id_event: string): Promise<{
     total: number | null;
     validated: number | null;
     remaining: number | null;
   }> {
-    const [total, validated, remaining] = await Promise.all([
-      this.getNbTicketTotal(id_event),
-      this.getNbTicketValidated(id_event),
-      this.getNbTicketRestant(id_event),
-    ]);
+    const stats = await this.getEventStats(id_event);
+    const participants = stats.participants;
+    const notScanned = stats.remaining;
+    const scanned =
+      participants !== null && notScanned !== null
+        ? Math.max(0, participants - notScanned)
+        : null;
 
     return {
-      total,
-      validated,
-      remaining,
+      total: participants,
+      validated: scanned,
+      remaining: notScanned,
     };
   }
 }
-

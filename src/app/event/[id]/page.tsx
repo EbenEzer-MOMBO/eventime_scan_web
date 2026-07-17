@@ -320,19 +320,19 @@ export default function EventDetailPage() {
                     <div className="text-2xl font-bold text-[#8BC34A]">
                       {ticketStats.total !== null ? ticketStats.total : '--'}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Total billets</div>
+                    <div className="text-sm text-gray-600 mt-1">Participants</div>
                   </div>
                   <div className="bg-green-50 p-4 rounded-xl text-center">
                     <div className="text-2xl font-bold text-green-600">
                       {ticketStats.validated !== null ? ticketStats.validated : '--'}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Validés</div>
+                    <div className="text-sm text-gray-600 mt-1">Scannés</div>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-xl text-center">
                     <div className="text-2xl font-bold text-orange-600">
                       {ticketStats.remaining !== null ? ticketStats.remaining : '--'}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Restants</div>
+                    <div className="text-sm text-gray-600 mt-1">Non scannés</div>
                   </div>
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function EventDetailPage() {
                 {filteredParticipants.map((participant) => (
                   <div
                     key={participant.ticket_item_id}
-                    className={`bg-white border-2 rounded-3xl p-5 flex items-center gap-4 ${participant.status === 1 ? 'border-green-200' : 'border-orange-200'
+                    className={`bg-white border-2 rounded-3xl p-5 flex items-center gap-4 ${ParticipantService.isValidated(participant) ? 'border-green-200' : 'border-orange-200'
                       }`}
                   >
                     <div
@@ -540,7 +540,7 @@ export default function EventDetailPage() {
                       className={`text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 flex-shrink-0 ${ParticipantService.getStatusColor(participant)
                         }`}
                     >
-                      {participant.status === 1 ? (
+                      {ParticipantService.isValidated(participant) ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
