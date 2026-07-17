@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { AuthService } from '@/services';
+import { AuthService, BrandingService } from '@/services';
+import { BRANDING_FALLBACK } from '@/config/branding';
 
 export default function Home() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(true);
+  const [logoDark, setLogoDark] = useState(BRANDING_FALLBACK.LOGO_DARK);
+  const [logoLight, setLogoLight] = useState(BRANDING_FALLBACK.LOGO_LIGHT);
 
   // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
@@ -24,6 +27,13 @@ export default function Home() {
       setChecking(false);
     }
   }, [router]);
+
+  useEffect(() => {
+    BrandingService.fetch().then((assets) => {
+      setLogoDark(assets.logoDark);
+      setLogoLight(assets.logoLight);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,10 +122,10 @@ export default function Home() {
       
       {/* Carte de connexion */}
       <div className="w-full max-w-xl bg-[#E8E8E8] rounded-3xl shadow-2xl p-12 flex flex-col items-center">
-        {/* Logo Eventime */}
+        {/* Logo Eventime (aligné eventime_repo) */}
         <div className="mb-12">
           <Image
-            src="/logo-eventime-noel-alt.png"
+            src={logoDark}
             alt="Eventime Logo"
             width={200}
             height={60}
@@ -209,10 +219,10 @@ export default function Home() {
       {/* Spacer pour pousser le contenu vers le centre */}
       <div className="flex-1"></div>
 
-      {/* Logo Eventime en bas */}
+      {/* Logo Eventime en bas (aligné eventime_repo) */}
       <div className="mb-4">
         <Image
-          src="/logo-light.png"
+            src={logoLight}
           alt="Eventime"
           width={180}
           height={50}

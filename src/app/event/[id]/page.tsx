@@ -19,6 +19,7 @@ export default function EventDetailPage() {
   const [activeTab, setActiveTab] = useState<'description' | 'participants'>('description');
   const [event, setEvent] = useState<Event | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participantsCount, setParticipantsCount] = useState(0); // vendus = initial - remaining
   const [searchQuery, setSearchQuery] = useState('');
   const [ticketStats, setTicketStats] = useState<{
     total: number | null;
@@ -49,6 +50,7 @@ export default function EventDetailPage() {
       ]);
 
       setParticipants(participantsResponse.data);
+      setParticipantsCount(participantsResponse.count ?? 0);
       setTicketStats(stats);
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
@@ -198,7 +200,7 @@ export default function EventDetailPage() {
         {/* Badge participants */}
         <div className="absolute top-6 right-6 z-20">
           <div className="bg-[#8BC34A] text-white px-6 py-3 rounded-2xl font-bold text-lg shadow-lg">
-            Participant(s): {ticketStats.validated !== null ? ticketStats.validated : '--'}
+            Participant(s): {participantsCount}
           </div>
         </div>
       </div>
@@ -362,7 +364,7 @@ export default function EventDetailPage() {
               </div>
 
               <div className="text-center text-white">
-                <div className="text-5xl font-bold">{participants.length}</div>
+                <div className="text-5xl font-bold">{participantsCount}</div>
                 <div className="text-xl font-semibold">Participants</div>
               </div>
 
@@ -469,11 +471,8 @@ export default function EventDetailPage() {
                             d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                           />
                         </svg>
-                        <span className="font-bold text-lg text-gray-600 truncate">
-                          {ParticipantService.truncateText(
-                            ParticipantService.getFullName(participant),
-                            20
-                          )}
+                        <span className="font-bold text-lg text-gray-600 break-words">
+                          {ParticipantService.getFullName(participant)}
                         </span>
                       </div>
 
@@ -492,8 +491,8 @@ export default function EventDetailPage() {
                             d="M16.5 6v.75m0 3v.75m0 3v.75m0 3v.75M9.75 3h4.5m-4.5 15h4.5M12 3v18"
                           />
                         </svg>
-                        <span className="text-gray-600 truncate">
-                          {ParticipantService.truncateText(participant.ticket_number, 15)}
+                        <span className="text-gray-600 break-all">
+                          {participant.ticket_number}
                         </span>
                       </div>
 
@@ -512,8 +511,8 @@ export default function EventDetailPage() {
                             d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                           />
                         </svg>
-                        <span className="text-gray-600 truncate">
-                          {ParticipantService.truncateText(participant.participant_email, 20)}
+                        <span className="text-gray-600 break-all">
+                          {participant.participant_email}
                         </span>
                       </div>
 
@@ -532,7 +531,7 @@ export default function EventDetailPage() {
                             d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
                           />
                         </svg>
-                        <span className="text-gray-600 truncate">{participant.buyer_name}</span>
+                        <span className="text-gray-600 break-words">{participant.buyer_name}</span>
                       </div>
                     </div>
 

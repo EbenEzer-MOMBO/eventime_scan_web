@@ -5,6 +5,7 @@ export { EventService } from './event.service';
 export { TicketService } from './ticket.service';
 export { ParticipantService } from './participant.service';
 export { ValidationService } from './validation.service';
+export { BrandingService } from './branding.service';
 
 // Export des types
 export type {

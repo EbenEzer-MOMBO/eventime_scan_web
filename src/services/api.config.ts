@@ -9,6 +9,7 @@ export const API_CONFIG = {
     EVENT_STATS: '/scanner/event-stats',
     PARTICIPANTS_LIST: '/scanner/participants-list',
     SCAN_TICKET: '/scanner/scan-ticket',
+    BRANDING: '/scanner/branding',
   },
   TIMEOUT: 10000,
 };
