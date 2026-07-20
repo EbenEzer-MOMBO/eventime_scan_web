@@ -23,32 +23,32 @@ Pour iOS, vous devez ajouter la description de l'usage de la caméra dans votre 
 
 ## 🌐 Configuration PWA (Progressive Web App)
 
-Si vous déployez l'application en tant que PWA, les autorisations sont gérées par le navigateur. Assurez-vous que :
+La PWA est configurée dans le projet :
 
-1. **HTTPS est activé** : Les APIs de caméra nécessitent une connexion sécurisée (HTTPS) sauf pour `localhost`
-2. **Service Worker est configuré** : Pour l'installation en PWA
-3. **Manifest.json est présent** : Avec les bonnes configurations
+- Manifest : `public/manifest.json`
+- Service Worker : `public/sw.js`
+- Bouton d’installation : composant `InstallPWAButton` (login + home)
 
-### Exemple de manifest.json
+Voir aussi : `docs/features/README_PWA.md`
+
+Les autorisations caméra restent gérées par le navigateur. Prérequis :
+
+1. **HTTPS** (ou `localhost`)
+2. **Service Worker** enregistré
+3. **Manifest** valide avec icônes 192 / 512
+
+### Contenu clé du manifest
 ```json
 {
-  "name": "EventTime Scanner",
-  "short_name": "EventTime",
+  "name": "Eventime Scan",
+  "short_name": "Eventime Scan",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#8BC34A",
   "theme_color": "#8BC34A",
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
 ```

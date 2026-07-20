@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AuthService, BrandingService } from '@/services';
 import { BRANDING_FALLBACK } from '@/config/branding';
+import InstallPWAButton from '@/components/InstallPWAButton';
 
 export default function Home() {
   const router = useRouter();
@@ -13,8 +14,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(true);
-  const [logoDark, setLogoDark] = useState(BRANDING_FALLBACK.LOGO_DARK);
-  const [logoLight, setLogoLight] = useState(BRANDING_FALLBACK.LOGO_LIGHT);
+  const [logoDark, setLogoDark] = useState<string>(BRANDING_FALLBACK.LOGO_DARK);
+  const [logoLight, setLogoLight] = useState<string>(BRANDING_FALLBACK.LOGO_LIGHT);
 
   // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
@@ -218,6 +219,9 @@ export default function Home() {
 
       {/* Spacer pour pousser le contenu vers le centre */}
       <div className="flex-1"></div>
+
+      {/* Installation PWA */}
+      <InstallPWAButton variant="login" className="mb-4" />
 
       {/* Logo Eventime en bas (aligné eventime_repo) */}
       <div className="mb-4">

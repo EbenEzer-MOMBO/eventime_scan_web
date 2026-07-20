@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,9 +19,17 @@ export const metadata: Metadata = {
   keywords: ["eventime", "scan", "événements", "tickets", "participants", "QR code"],
   authors: [{ name: "Eventime" }],
   applicationName: "Eventime Scan",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Eventime Scan",
+  },
   icons: {
-    icon: "https://eventime.ga/public/storage/img-utils-page/y3Ql5KilXKiHwXiNuvCtbXRl6G8uWnS0Fh5Ipj2W.png",
-    apple: "https://eventime.ga/public/storage/img-utils-page/y3Ql5KilXKiHwXiNuvCtbXRl6G8uWnS0Fh5Ipj2W.png",
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     title: "Eventime Scan",
@@ -29,9 +38,9 @@ export const metadata: Metadata = {
     siteName: "Eventime Scan",
     images: [
       {
-        url: "https://eventime.ga/public/storage/img-utils-page/y3Ql5KilXKiHwXiNuvCtbXRl6G8uWnS0Fh5Ipj2W.png",
-        width: 1200,
-        height: 630,
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
         alt: "Eventime Scan",
       },
     ],
@@ -39,16 +48,24 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Eventime Scan",
     description: "Application de scan et gestion des participants pour les événements Eventime",
-    images: ["https://eventime.ga/public/storage/img-utils-page/y3Ql5KilXKiHwXiNuvCtbXRl6G8uWnS0Fh5Ipj2W.png"],
+    images: ["/icon-512.png"],
   },
   robots: {
     index: true,
     follow: true,
   },
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#8BC34A",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -62,6 +79,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

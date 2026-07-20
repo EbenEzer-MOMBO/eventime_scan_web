@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AuthService, EventService, TicketService, type Event } from '@/services';
+import InstallPWAButton from '@/components/InstallPWAButton';
 
 export default function HomePage() {
   const router = useRouter();
@@ -141,11 +142,12 @@ export default function HomePage() {
           <span className="text-3xl font-bold text-black">{agentData?.nom_agent || 'Agent'}</span>
         </div>
 
-        {/* Matricule et déconnexion */}
-        <div className="flex flex-col items-end gap-2">
+        {/* Matricule, PWA et déconnexion */}
+        <div className="relative flex flex-col items-end gap-2">
           <div className="bg-[#8BC34A] text-white px-6 py-2 rounded-lg font-semibold">
             {agentData?.matricule_agent || 'N/A'}
           </div>
+          <InstallPWAButton variant="home" />
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 text-red-500 font-semibold text-lg hover:text-red-600 transition-colors"
